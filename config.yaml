@@ -1,0 +1,36 @@
+leagues:
+  - code: E0
+    name: "Premier League"
+  - code: SP1
+    name: "La Liga"
+  - code: I1
+    name: "Serie A"
+  - code: D1
+    name: "Bundesliga"
+  - code: F1
+    name: "Ligue 1"
+
+# Newest last. Add the new season code each August; scripts/update_fixtures.py
+# derives the in-progress season independently via current_season_code().
+seasons: ["2223", "2324", "2425", "2526", "2627"]
+
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  fixtures_url: "https://www.football-data.co.uk/fixtures.csv"
+
+model:
+  xi: 0.0018
+  max_goals: 10
+  # Artifacts live under artifacts/{league_code}/ - one fitted model per
+  # league, never pooled. See src/hattrick/config.py for why.
+  artifact_dir: "artifacts"
+
+simulation:
+  n_sims: 10000
+  # Matches on/after this date count as "already played this season" for
+  # the table simulator; everything before it is still used to FIT the
+  # model (recent form matters) but doesn't count toward this season's table.
+  # Leave null to derive it (1 August of the season in progress) - a
+  # hardcoded date is right for one year and then quietly wrong.
+  current_season_start: null

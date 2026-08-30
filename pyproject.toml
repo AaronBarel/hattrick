@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hattrick"
+version = "0.1.0"
+description = "Multi-league Dixon-Coles soccer forecasting: match outcomes and season simulation"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Aaron Barel" }]
+requires-python = ">=3.10"
+keywords = ["soccer", "football", "forecasting", "dixon-coles", "poisson",
+            "monte-carlo", "sports-analytics"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scipy>=1.11",
+    "requests>=2.31",
+    "PyYAML>=6.0",
+]
+
+# Optional features. Each degrades gracefully when absent: the model falls
+# back to actual goals without `xg`, and the dashboard is simply unavailable
+# without `ui`. None of them is needed to fit, evaluate or simulate.
+[project.optional-dependencies]
+xg = ["soccerdata>=1.9"]
+ui = ["streamlit>=1.38", "plotly>=5.22"]
+notebooks = ["jupyter>=1.0", "matplotlib>=3.8", "nbconvert>=7.0"]
+
+# PEP 735. `uv sync` installs this group by default, so a fresh clone can run
+# the tests without naming an extra.
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
