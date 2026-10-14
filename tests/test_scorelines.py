@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from hattrick.model.markets import outcome_probs, over_under, btts, correct_score_probs
+from hattrick.model.scorelines import outcome_probs, over_under, btts, correct_score_probs
 
 def _toy_matrix():
     n = 4

@@ -32,6 +32,11 @@ Walk-forward, not a single train/test split: fit once on everything before
 periodically refitting on newly completed results (every `refit_every`
 matches) so later predictions benefit from in-season form - closer to how
 this system would actually be run live than a single static fit.
+
+One league at a time: `walk_forward_backtest` fits a single model, so it must
+be handed one league's matches. `backtest_by_league` runs it per league and
+pools the per-match scores. Pooling the *fits* would put teams that never
+meet on one rating scale - see `hattrick.config` for why that is wrong.
 """
 from __future__ import annotations
 
@@ -41,7 +46,7 @@ import numpy as np
 import pandas as pd
 
 from hattrick.model.dixon_coles import DixonColesModel
-from hattrick.model.markets import score_matrix, outcome_probs
+from hattrick.model.scorelines import score_matrix, outcome_probs
 
 OUTCOMES = ["home_win", "draw", "away_win"]
 
@@ -250,11 +255,13 @@ class BacktestResult:
     market_source: str | None = None
     market_label: str | None = None
 
-    def model_probs_list(self, df: pd.DataFrame) -> list[dict]:
+    def model_probs_list(self, df: pd.DataFrame | None = None) -> list[dict]:
+        df = self.per_match if df is None else df
         return [{"home_win": r.model_home_win, "draw": r.model_draw, "away_win": r.model_away_win}
                 for r in df.itertuples()]
 
-    def market_probs_list(self, df: pd.DataFrame) -> list[dict]:
+    def market_probs_list(self, df: pd.DataFrame | None = None) -> list[dict]:
+        df = self.per_match if df is None else df
         return [{"home_win": r.market_home_win, "draw": r.market_draw, "away_win": r.market_away_win}
                 for r in df.itertuples()]
 
@@ -318,6 +325,11 @@ def walk_forward_backtest(
     initial fit and each walk-forward refit), so feature ablations can vary
     the model without duplicating this loop.
     """
+    if "league" in matches.columns and matches["league"].nunique() > 1:
+        raise ValueError(
+            f"walk_forward_backtest got {matches['league'].nunique()} leagues; it fits one "
+            f"model, so pass one league at a time (see backtest_by_league)."
+        )
     matches = matches.sort_values("date").reset_index(drop=True)
     holdout_start = pd.Timestamp(holdout_start)
     train = matches[matches["date"] < holdout_start].copy()
@@ -372,6 +384,11 @@ def walk_forward_backtest(
     if per_match.empty:
         raise ValueError("No holdout matches could be evaluated (all teams unseen in training data).")
 
+    return _summarize(per_match, market_name, market_label)
+
+
+def _summarize(per_match: pd.DataFrame, market_source: str | None,
+               market_label: str | None) -> BacktestResult:
     model_probs_list = [{"home_win": r.model_home_win, "draw": r.model_draw, "away_win": r.model_away_win}
                          for r in per_match.itertuples()]
     actuals = per_match["actual"].tolist()
@@ -390,5 +407,28 @@ def walk_forward_backtest(
     return BacktestResult(
         n_matches=len(per_match), model_log_loss=model_ll, model_brier=model_brier,
         n_with_market=len(with_market), market_log_loss=market_ll, market_brier=market_brier,
-        per_match=per_match, market_source=market_name, market_label=market_label,
+        per_match=per_match, market_source=market_source, market_label=market_label,
     )
+
+
+def backtest_by_league(matches: pd.DataFrame, holdout_start, **kwargs) -> dict[str, BacktestResult]:
+    """Run `walk_forward_backtest` separately for each league.
+
+    Returns `{league_code: BacktestResult}` plus an `"ALL"` entry whose scores
+    are pooled at the per-match level across leagues - every match is still
+    predicted by its own league's model. The pooled entry's market label is
+    set only when every league used the same odds source.
+    """
+    out = {}
+    for code, sub in matches.groupby("league", sort=False):
+        res = walk_forward_backtest(sub, holdout_start, **kwargs)
+        res.per_match.insert(0, "league", code)
+        out[code] = res
+    if not out:
+        raise ValueError("No leagues to backtest.")
+    sources = {(r.market_source, r.market_label) for r in out.values()}
+    source, label = sources.pop() if len(sources) == 1 else (
+        "mixed", "mixed odds sources - see each league's label")
+    out["ALL"] = _summarize(pd.concat([r.per_match for r in out.values()], ignore_index=True),
+                            source, label)
+    return out

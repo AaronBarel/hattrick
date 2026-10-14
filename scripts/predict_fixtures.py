@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-"""Predict every market for each upcoming fixture using the fitted model."""
+"""Predict outcome, total-goals and scoreline probabilities for each upcoming fixture."""
 from __future__ import annotations
 from hattrick.config import load_config, load_league_models, resolve_path
 from hattrick.data.loader import load_fixtures
-from hattrick.model.markets import all_markets
+from hattrick.model.scorelines import match_probabilities
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
             if home not in model.params.attack or away not in model.params.attack:
                 print(f"{row['date'].date()} {home} vs {away}: skipped (unseen team)")
                 continue
-            m = all_markets(model, home, away, max_goals)
+            m = match_probabilities(model, home, away, max_goals)
             res = m["result"]
             print(f"\n{row['date'].date()}  {home} vs {away}")
             print(f"  Win/Draw/Loss:  H {res['home_win']:.1%}  D {res['draw']:.1%}  A {res['away_win']:.1%}")

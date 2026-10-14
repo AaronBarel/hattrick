@@ -38,7 +38,7 @@ def synthetic_league(n_teams=20, rounds=4, seed=0, xg_noise=0.15, start="2022-08
     5% overround, so it is a genuinely strong benchmark rather than a
     strawman.
     """
-    from hattrick.model.markets import outcome_probs, score_matrix
+    from hattrick.model.scorelines import outcome_probs, score_matrix
 
     rng = np.random.default_rng(seed)
     teams = [f"Team {i:02d}" for i in range(n_teams)]

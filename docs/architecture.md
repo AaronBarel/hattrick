@@ -18,7 +18,7 @@ Understat (soccerdata)│                                          │
                                                                  │
                           ┌──────────────────────┼────────────────────────┐
                           ▼                      ▼                        ▼
-                  markets.py               season_sim.py            evaluation.py
+                  scorelines.py            season_sim.py            evaluation.py
                   (per-fixture             (Monte Carlo             (walk-forward
                    W/D/L, O/U, BTTS)        league table)            backtest)
                           │                      │                        │
@@ -68,14 +68,16 @@ The per-league artifact directory makes pooling hard to do by accident.
 ### Model (`model/`)
 - **`dixon_coles.py`** — the estimator. IPF warm start, L-BFGS-B refinement,
   partial pooling, optional continuous (xG) target and promoted-team prior.
-- **`markets.py`** — scoreline matrix → every derived market (W/D/L, over/
-  under, BTTS, correct score).
+- **`scorelines.py`** — scoreline matrix → derived match probabilities (W/D/L,
+  over/under 2.5 goals, both teams to score, most likely scorelines).
 - **`season_sim.py`** — Monte Carlo simulation of a league table from
   remaining fixtures.
 
 ### Evaluation
 - **`evaluation.py`** — scoring rules, calibration, paired bootstrap,
-  benchmark selection (`resolve_market_source`), and `walk_forward_backtest`.
+  benchmark selection (`resolve_market_source`), `walk_forward_backtest` (one
+  league) and `backtest_by_league` (each league with its own model, scores
+  pooled per match).
 - **`experiments.py`** — compares model configurations across leagues with
   significance tests; also provides the synthetic league the notebooks fall
   back to.
@@ -94,7 +96,7 @@ produced and does not refresh anything itself.
 | `fit_model.py` | one model per league → `artifacts/{league}/` | no |
 | `predict_fixtures.py` | upcoming fixture probabilities | — |
 | `simulate_season.py` | league table Monte Carlo | — |
-| `backtest.py` | walk-forward evaluation | — |
+| `backtest.py` | walk-forward evaluation, per league | — |
 
 The two optional steps depend on scraped sources with no availability
 guarantee, so `run_pipeline.py` marks them non-fatal: the model falls back to

@@ -7,9 +7,9 @@ game, which means a single deflection moves the scoreline by ~40% of a
 typical match's information content. xG measures the quality of the chances a
 team created, so it is a far less noisy estimate of the same underlying
 attack/defense strength that Dixon-Coles is trying to recover. The empirical
-finding - consistent across the public analytics literature and used by both
-books and bettors - is that team xG predicts *future* results better than
-past goals do, precisely because it strips out finishing variance. See
+finding - consistent across the public analytics literature - is that team
+xG predicts *future* results better than past goals do, precisely because it
+strips out finishing variance. See
 Hudl's overview of xG and the PLOS ONE review of xG model performance:
 
   https://www.hudl.com/blog/expected-goals-xg-explained

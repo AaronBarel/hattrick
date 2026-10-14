@@ -9,7 +9,7 @@ own scoreline distributions, compute that trial's final table, repeat
 thousands of times, and the table-outcome probabilities just fall out of the
 empirical distribution across trials.
 
-Everything here reuses `model/markets.score_matrix` - one fitted model, same
+Everything here reuses `model/scorelines.score_matrix` - one fitted model, same
 scoreline distributions used for match-level predictions, no separate model
 needed for the season view.
 """
@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 from hattrick.model.dixon_coles import DixonColesModel
-from hattrick.model.markets import score_matrix
+from hattrick.model.scorelines import score_matrix
 
 
 def _sample_scoreline(M: np.ndarray, rng: np.random.Generator) -> tuple[int, int]:

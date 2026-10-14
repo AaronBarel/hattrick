@@ -26,7 +26,7 @@ from hattrick.config import (
 )
 from hattrick.data.loader import load_fixtures
 from hattrick.model.dixon_coles import DixonColesModel
-from hattrick.model.markets import all_markets
+from hattrick.model.scorelines import match_probabilities
 from hattrick.evaluation import OUTCOMES, expected_calibration_error, log_loss
 
 st.set_page_config(page_title="Hattrick", layout="wide")
@@ -189,7 +189,7 @@ with tab_fixtures:
                     "ratings for yet - typically newly promoted sides.")
         for _, row in known.iterrows():
             home, away = row["home"], row["away"]
-            m = all_markets(model, home, away, cfg["model"]["max_goals"])
+            m = match_probabilities(model, home, away, cfg["model"]["max_goals"])
             with st.container(border=True):
                 c1, c2 = st.columns([2, 3])
                 with c1:
@@ -239,7 +239,25 @@ with tab_validation:
         model_probs = [{"home_win": r.model_home_win, "draw": r.model_draw, "away_win": r.model_away_win}
                        for r in per_match.itertuples()]
         actuals = per_match["actual"].tolist()
-        st.metric("Model log loss", f"{log_loss(model_probs, actuals):.4f}")
+        st.caption(f"Walk-forward backtest: {len(per_match)} matches from "
+                   f"{per_match['date'].min().date()}, each league predicted by its own model.")
+        st.metric("Model log loss (all leagues)", f"{log_loss(model_probs, actuals):.4f}")
+        if "league" in per_match.columns:
+            def _ll(df, prefix):
+                df = df.dropna(subset=[f"{prefix}_home_win"])
+                if df.empty:
+                    return None
+                probs = [{"home_win": getattr(r, f"{prefix}_home_win"), "draw": getattr(r, f"{prefix}_draw"),
+                          "away_win": getattr(r, f"{prefix}_away_win")} for r in df.itertuples()]
+                return log_loss(probs, df["actual"].tolist())
+            by_league = pd.DataFrame([
+                {"League": league_name(cfg, code), "Matches": len(g),
+                 "Model log loss": _ll(g, "model"), "Market log loss": _ll(g, "market")}
+                for code, g in per_match.groupby("league", sort=False)
+            ])
+            st.dataframe(by_league.style.format({"Model log loss": "{:.4f}",
+                                                 "Market log loss": "{:.4f}"}, na_rep="-"),
+                         hide_index=True)
         outcome = st.radio("Outcome", OUTCOMES, horizontal=True)
         st.plotly_chart(reliability_diagram(calibration, outcome), use_container_width=True)
         ece = expected_calibration_error(model_probs, actuals, outcome)

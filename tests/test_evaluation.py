@@ -3,7 +3,8 @@ import pandas as pd
 import pytest
 
 from hattrick.evaluation import (
-    log_loss, brier_score, devig_bookmaker_probs, actual_outcome, walk_forward_backtest,
+    log_loss, brier_score, devig_bookmaker_probs, actual_outcome, backtest_by_league,
+    walk_forward_backtest,
 )
 
 
@@ -95,3 +96,33 @@ def test_walk_forward_backtest_without_odds_columns():
     result = walk_forward_backtest(matches, holdout_start=holdout_start, xi=0.0, refit_every=15)
     assert result.market_log_loss is None
     assert result.n_with_market == 0
+
+
+def _league(league, seed, n_teams=6, n_rounds=6):
+    m = _synthetic_matches_with_odds(n_teams=n_teams, n_rounds=n_rounds, seed=seed)
+    m["home"] = league + "-" + m["home"]
+    m["away"] = league + "-" + m["away"]
+    m["league"] = league
+    return m
+
+
+def test_walk_forward_backtest_refuses_to_pool_leagues():
+    """One fit across leagues would put teams that never meet on one rating
+    scale. The backtest must refuse rather than quietly do it."""
+    both = pd.concat([_league("A", 1), _league("B", 2)])
+    with pytest.raises(ValueError, match="one league at a time"):
+        walk_forward_backtest(both, holdout_start=both["date"].quantile(0.5))
+
+
+def test_backtest_by_league_fits_each_league_separately_and_pools_per_match():
+    a, b = _league("A", 1), _league("B", 2, n_teams=5)
+    results = backtest_by_league(pd.concat([a, b]), holdout_start=a["date"].quantile(0.5),
+                                 xi=0.0, refit_every=15)
+    assert set(results) == {"A", "B", "ALL"}
+    pooled = results["ALL"]
+    assert pooled.n_matches == results["A"].n_matches + results["B"].n_matches
+    assert set(pooled.per_match["league"]) == {"A", "B"}
+    for attr in ("model_log_loss", "market_log_loss"):
+        weighted = sum(getattr(results[k], attr) * results[k].n_matches for k in "AB")
+        assert getattr(pooled, attr) == pytest.approx(weighted / pooled.n_matches)
+    assert pooled.market_source == results["A"].market_source

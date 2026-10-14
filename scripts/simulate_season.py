@@ -4,7 +4,7 @@
 CAVEAT worth reading: football-data.co.uk's fixtures.csv only lists
 near-term upcoming fixtures, not the full remaining season schedule. This
 script uses whatever's in fixtures.csv by default, which means title/top-4/
-relegation odds will be less accurate the earlier in the season you run this
+relegation probabilities will be less accurate the earlier in the season you run this
 (fewer remaining fixtures simulated = table looks more "locked in" than it
 really is). For a fuller remaining-fixture list, pass --remaining-fixtures
 pointing at a CSV with columns date,home,away covering the whole season

@@ -4,11 +4,32 @@ Every measured result, including — especially — the negative ones. **Append
 here whenever you measure something.** A dead experiment that nobody recorded
 gets re-run.
 
-Unless stated otherwise: walk-forward backtest, holdout from 2025-08-01,
-pooled across all five leagues at the per-match level, log loss (lower is
-better), significance by paired bootstrap.
+Unless stated otherwise: walk-forward backtest, holdout from 2025-08-01, each
+league fitted separately, losses pooled across all five leagues at the
+per-match level, log loss (lower is better), significance by paired
+bootstrap.
 
-## Summary
+## Current performance
+
+`scripts/backtest.py --holdout-start 2025-08-01 --refit-every 10`: the
+2025/26 season plus the opening weeks of 2026/27 (to 2026-08-27). Market =
+de-vigged cross-book average closing odds, selected automatically in every
+league.
+
+| League | Matches | Model | Market | Model − market | 95% CI | p |
+|---|---|---|---|---|---|---|
+| Premier League | 387 | 1.0236 | 1.0089 | +0.0147 | [−0.0028, +0.0324] | 0.10 |
+| La Liga | 395 | 0.9787 | 0.9660 | +0.0126 | [−0.0015, +0.0263] | 0.08 |
+| Serie A | 389 | 0.9923 | 0.9732 | +0.0192 | [+0.0036, +0.0350] | 0.02 |
+| Bundesliga | 304 | 0.9711 | 0.9488 | +0.0223 | [+0.0011, +0.0437] | 0.04 |
+| Ligue 1 | 313 | 0.9933 | 0.9747 | +0.0186 | [−0.0009, +0.0376] | 0.06 |
+| **All leagues** | **1,788** | **0.9927** | **0.9755** | **+0.0172** | [+0.0093, +0.0250] | <0.001 |
+
+The market is ahead in every league; pooled, the gap is clearly significant.
+Model Brier 0.5915 against the market's 0.5806. Model expected calibration
+error over all leagues: home win 0.030, draw 0.009, away win 0.021.
+
+## Summary of changes
 
 | # | Change | Verdict |
 |---|---|---|
@@ -16,9 +37,10 @@ better), significance by paired bootstrap.
 | 2 | Fix degenerate ratings (boundary + failed optimizer) | **Large win** — 1.0924 → 1.0482 |
 | 3 | Partial pooling across teams | **Positive, borderline** — 1.0482 → 1.0245; p moves with configuration |
 | 4 | xG as fitting target | **No effect** — +0.0009, p=0.72 |
-| 6 | Promoted-team prior | **No effect / slightly negative** — shipped off by default |
-| 7 | Second-tier record as promoted predictor | **No signal** — r = −0.08, killed before building |
-| 8 | Team-identity canonicalization | **Correctness fix** — one club was fitted as two |
+| 5 | Promoted-team prior | **No effect / slightly negative** — shipped off by default |
+| 6 | Second-tier record as promoted predictor | **No signal** — r = −0.08, killed before building |
+| 7 | Team-identity canonicalization | **Correctness fix** — one club was fitted as two |
+| 8 | Backtest one league at a time | **Correctness fix** — `backtest.py` had fitted all leagues as one model |
 
 ## 1. Pre-closing odds were labeled closing
 
@@ -134,6 +156,25 @@ promoted side is in the top few percent of the division below, so there is
 almost no variance in the predictor.
 
 Killed in ten minutes, before building the pipeline.
+
+## 7. One club fitted as two
+
+football-data.co.uk renamed two La Liga clubs mid-archive — "Ath Madrid" →
+"Atl. Madrid" and "Vallecano" → "Rayo Vallecano" — for exactly one match each.
+The model was fitting Atlético Madrid as a 153-match club *plus* a phantom
+one-match team, and promotion detection flagged the phantom as newly
+promoted. `canonicalize_teams()` now merges spellings that share a canonical
+name within a league, keeping the most frequent (`data.md`).
+
+## 8. Backtest pooled every league into one fit
+
+`scripts/backtest.py` passed the whole multi-league `matches.csv` to
+`walk_forward_backtest`, so the dashboard's validation figures came from one
+model rating every club in Europe on a single scale — the thing the rest of
+the project goes out of its way to prevent. It now backtests each league
+with its own model (`backtest_by_league`) and pools only the per-match
+scores, and `walk_forward_backtest` refuses a frame with more than one
+league.
 
 ## Where season-start error actually lives
 

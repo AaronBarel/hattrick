@@ -17,13 +17,21 @@ and the results reported below include the ones that did not work.
   **and against the bookmaker's closing line**, with paired bootstrap
   confidence intervals and calibration curves.
 
-**The model does not beat the bookmaker closing line.** Pooled over five
-leagues across the 2025/26 season (1,738 matches):
+**The model does not beat the bookmaker closing line.** Walk-forward backtest
+from 1 August 2025 (the 2025/26 season plus the opening weeks of 2026/27),
+each league predicted by its own model, log loss (lower is better):
 
-| | Log loss |
-|---|---|
-| This model | 0.9952 |
-| De-vigged closing line | **0.9778** |
+| League | Matches | This model | De-vigged closing line |
+|---|---|---|---|
+| Premier League | 387 | 1.0236 | **1.0089** |
+| La Liga | 395 | 0.9787 | **0.9660** |
+| Serie A | 389 | 0.9923 | **0.9732** |
+| Bundesliga | 304 | 0.9711 | **0.9488** |
+| Ligue 1 | 313 | 0.9933 | **0.9747** |
+| **All leagues** | **1,788** | 0.9927 | **0.9755** |
+
+Pooled, the gap is +0.0172 (95% CI [+0.0093, +0.0250]). For scale, a
+forecast of 1/3 each for home win, draw and away win scores ln 3 ≈ 1.0986.
 
 Things that were tried and **did not help**, each measured rather than
 assumed: fitting on expected goals instead of goals (+0.0009, p=0.72), a
@@ -34,7 +42,7 @@ confidence intervals in [`docs/findings.md`](docs/findings.md).
 ## Quick start
 
 ```bash
-git clone https://github.com/<you>/hattrick
+git clone https://github.com/AaronBarel/hattrick
 cd hattrick
 uv sync                                     # core + test dependencies
 
@@ -131,7 +139,7 @@ scorelines rather than trusting a coverage percentage.
 ## Tests
 
 ```bash
-uv run pytest                        # 128 tests
+uv run pytest                        # 130 tests
 uv run pytest tests/test_docs.py     # check the docs match the code
 ```
 

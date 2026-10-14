@@ -35,6 +35,12 @@ justify.
 This mirrors how the system would actually run. Nothing after a match ever
 informs the prediction made for it.
 
+**One league at a time.** `walk_forward_backtest()` fits a single model, so
+it refuses a frame containing more than one league. `backtest_by_league()`
+runs it per league — every match is predicted by its own league's model — and
+pools the per-match scores for the all-league figure. Pooling *scores* is fine;
+pooling *fits* would put teams that never meet on one rating scale.
+
 `refit_every` trades fidelity against runtime (10 for careful work, 20 for
 sweeps). It does move results slightly — a difference that flips significance
 when you change the refit cadence is not a real difference.
@@ -114,8 +120,9 @@ project has measured rather than assumed.
 matches per league; a 0.01-nat movement is routinely indistinguishable from
 zero. Report a confidence interval or do not report the result.
 
-**The model does not beat the closing line.** Pooled over five leagues in
-2025/26 it scores 0.9952 against the closing line's 0.9778. Any change should
+**The model does not beat the closing line.** Pooled over five leagues from
+1 August 2025 (1,788 matches) it scores 0.9927 against the closing line's
+0.9755. Any change should
 be judged on whether it closes that gap, not on whether the number drifted
 down. A second diagnostic from `findings.md`: model-market **disagreement size
 is an inverse quality indicator** — the further the model departs from the

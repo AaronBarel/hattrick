@@ -70,8 +70,9 @@ carry more, so their probabilities are mildly overstated. Applied identically
 to both sides of every comparison. *Severity: low.*
 
 **The closing line is the best freely available probability estimate.**
-Well supported, and this project's own evidence agrees: closing (0.9778) beats
-pre-closing (0.9806) beats the model (0.9952). *Severity: n/a — this is the
+Well supported, and this project's own evidence agrees: the closing line
+beats the pre-closing line (`findings.md`), and beats the model 0.9755 to
+0.9927 over 1,788 matches from 1 August 2025. *Severity: n/a — this is the
 benchmark, and it holds up.*
 
 ## Structural
@@ -114,8 +115,8 @@ gracefully; the football-data dependency is load-bearing and has no fallback.
 ## The meta-assumption worth stating
 
 **That a better log loss means a better forecast in the ways that matter.**
-Not automatically. The model loses to the bookmaker closing line (0.9952 vs
-0.9778), and its *largest* departures from that line are its worst
+Not automatically. The model loses to the bookmaker closing line (0.9927 vs
+0.9755), and its *largest* departures from that line are its worst
 predictions. So a change can improve average log loss while leaving the model
 no more informative than a price anyone can look up. Treat closing-line
 comparison, not self-comparison, as the standard.

@@ -46,7 +46,7 @@ def test_ipf_and_fit_recover_known_parameters():
 
 
 def test_fit_produces_valid_scoreline_matrix():
-    from hattrick.model.markets import score_matrix, outcome_probs
+    from hattrick.model.scorelines import score_matrix, outcome_probs
     matches, *_ = make_synthetic_league(n_teams=6, matches_per_pair=3, seed=1)
     model = DixonColesModel(xi=0.0)
     model.fit(matches)

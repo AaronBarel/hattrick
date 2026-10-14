@@ -1,4 +1,4 @@
-"""Scoreline matrix -> every derived market (W/D/L, totals, BTTS, correct score)."""
+"""Scoreline matrix -> derived match probabilities (W/D/L, totals, BTTS, correct score)."""
 from __future__ import annotations
 import numpy as np
 from scipy.stats import poisson
@@ -43,7 +43,7 @@ def correct_score_probs(M: np.ndarray, top_n: int = 6):
     return flat[:top_n]
 
 
-def all_markets(model: DixonColesModel, home: str, away: str, max_goals: int = 10) -> dict:
+def match_probabilities(model: DixonColesModel, home: str, away: str, max_goals: int = 10) -> dict:
     M = score_matrix(model, home, away, max_goals)
     lam, mu = model.rates(home, away)
     return {"home": home, "away": away, "lambda_home": lam, "mu_away": mu,

@@ -227,7 +227,7 @@ class DixonColesModel:
             # has its maximum-likelihood rating at the boundary, and the
             # optimizer happily drives beta_k to ~1e-3. That is not a
             # near-miss: it says the opponent scores zero goals with
-            # probability ~1, which poisons every derived market for that
+            # probability ~1, which poisons every derived probability for that
             # fixture.
             #
             # A Gaussian prior log(rating_k) ~ N(mean_log_rating, sd^2)

@@ -175,11 +175,12 @@ sets: over a multi-season window most promoted sides are yo-yo clubs, and 8 of
 Handing those a relegation-candidate prior is pure bias, and measurably made
 forecasts worse before the fade existed.
 
-## From rates to markets
+## From rates to match probabilities
 
-`markets.py` builds a `(max_goals+1) x (max_goals+1)` scoreline matrix from
+`scorelines.py` builds a `(max_goals+1) x (max_goals+1)` scoreline matrix from
 `lambda`, `mu`, `rho`, renormalises it (truncation at `max_goals = 10` loses a
-little mass), and reads every market off it: W/D/L from the triangles,
-over/under by summing the anti-diagonals, BTTS from the complement of the
-first row and column. One matrix, every derived market — so all quoted
-probabilities are mutually consistent by construction.
+little mass), and reads every derived probability off it: W/D/L from the
+triangles, over/under 2.5 goals by summing the anti-diagonals, both teams to
+score from the complement of the first row and column. One matrix for
+everything, so all reported probabilities are mutually consistent by
+construction.
