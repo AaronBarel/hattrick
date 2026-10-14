@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 """Monte Carlo simulate the rest of the season using the fitted model.
 
-CAVEAT worth reading: football-data.co.uk's fixtures.csv only lists
-near-term upcoming fixtures, not the full remaining season schedule. This
-script uses whatever's in fixtures.csv by default, which means title/top-4/
-relegation probabilities will be less accurate the earlier in the season you run this
-(fewer remaining fixtures simulated = table looks more "locked in" than it
-really is). For a fuller remaining-fixture list, pass --remaining-fixtures
-pointing at a CSV with columns date,home,away covering the whole season
-(e.g. from a full schedule download) and this script will use that instead.
+Remaining fixtures come from `load_fixtures`, which uses the full-season
+schedule written by scripts/update_fixtures.py (Understat) when it exists.
+If that step has not run or failed for a league, it falls back to
+football-data.co.uk's rolling fixtures.csv, which covers only the next few
+days: the simulation then treats the table as far more settled than it is,
+and this script says so. Pass --remaining-fixtures to supply your own
+schedule instead.
 
 Usage:
     python scripts/simulate_season.py
-    python scripts/simulate_season.py --remaining-fixtures data/raw/full_schedule.csv
+    python scripts/simulate_season.py --remaining-fixtures my_schedule.csv
 """
 from __future__ import annotations
 
@@ -67,8 +66,10 @@ def simulate_one(cfg, args, code, model, all_matches_full):
         remaining = pd.read_csv(args.remaining_fixtures, parse_dates=["date"])
     else:
         remaining = load_fixtures(raw_dir, league["code"])
-        print("NOTE: using fixtures.csv (near-term only, not the full remaining season). "
-              "See this script's docstring for how to supply a fuller schedule.\n")
+        if remaining.attrs.get("source") == "rolling":
+            print(f"NOTE: no full-season schedule for {league['name']}; simulating only the "
+                  f"near-term fixtures in fixtures.csv, so the table will look more settled "
+                  f"than it is. Run scripts/update_fixtures.py for the full schedule.\n")
 
     if played.empty and remaining.empty:
         print(f"No played or remaining fixtures for {league['name']} ({code}) - skipping.")

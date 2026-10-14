@@ -65,7 +65,6 @@
 | football-data.co.uk | https://www.football-data.co.uk | results, odds, fixtures, second tiers |
 | Understat | https://understat.com | match xG, forward schedule |
 | `soccerdata` | https://github.com/probberechts/soccerdata | maintained scraper wrapper |
-| Club Elo | http://clubelo.com | independent rating sanity check |
 | FBref | https://fbref.com | alternative xG (StatsBomb-powered), unused |
 | StatsBomb Open Data | https://github.com/statsbomb/open-data | event-level, unused |
 

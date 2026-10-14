@@ -63,7 +63,6 @@ The per-league artifact directory makes pooling hard to do by accident.
   `fixtures_full.csv`.
 - **`features.py`** — derived per-team features; currently promotion
   detection.
-- **`clubelo.py`** — optional Club Elo ratings, used only as a sanity check.
 
 ### Model (`model/`)
 - **`dixon_coles.py`** — the estimator. IPF warm start, L-BFGS-B refinement,

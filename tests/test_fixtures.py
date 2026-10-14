@@ -73,6 +73,7 @@ def test_full_schedule_is_preferred_over_the_rolling_file(tmp_path):
     _write_full(tmp_path, "E0,2026-08-28,2026-08-28 19:00:00+00:00,Full,Schedule,False\n")
     out = load_fixtures(tmp_path, "E0", now=pd.Timestamp("2026-08-27", tz="UTC"))
     assert list(out["home"]) == ["Full"]
+    assert out.attrs["source"] == "full_schedule"
 
 
 def test_full_schedule_drops_already_played_matches(tmp_path):
@@ -90,13 +91,16 @@ def test_falls_back_per_league_not_just_per_file(tmp_path):
     _write_full(tmp_path, "E0,2026-08-28,2026-08-28 19:00:00+00:00,Arsenal,Chelsea,False\n")
     _write_rolling(tmp_path, "D1,29/08/2026,18:30,Bayern Munich,Dortmund\n")
     now = pd.Timestamp("2026-08-27", tz="UTC")
-    assert list(load_fixtures(tmp_path, "E0", now=now)["home"]) == ["Arsenal"]
-    assert list(load_fixtures(tmp_path, "D1", now=now)["home"]) == ["Bayern Munich"]
+    e0, d1 = load_fixtures(tmp_path, "E0", now=now), load_fixtures(tmp_path, "D1", now=now)
+    assert list(e0["home"]) == ["Arsenal"] and e0.attrs["source"] == "full_schedule"
+    assert list(d1["home"]) == ["Bayern Munich"]
+    assert d1.attrs["source"] == "rolling", "callers rely on this to warn about a near-term-only schedule"
 
 
 def test_no_fixture_files_at_all_is_an_empty_frame_not_a_crash(tmp_path):
     out = load_fixtures(tmp_path, "E0")
     assert out.empty and list(out.columns) == ["date", "kickoff", "home", "away"]
+    assert out.attrs["source"] is None
 
 
 # ------------------------------------------------------------ season code
