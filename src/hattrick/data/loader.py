@@ -284,11 +284,15 @@ def load_fixtures(raw_dir: Path, league_code: str, upcoming_only: bool = True,
     dashboard shows games whose results are already known, which reads as
     the model predicting the past.
 
-    Returns columns `date`, `kickoff` (tz-aware UTC), `home`, `away`.
+    Returns columns `date`, `kickoff` (tz-aware UTC), `home`, `away`, with
+    `attrs["source"]` set to "full_schedule", "rolling", or None (no data), so
+    callers can say whether the result covers the rest of the season or only
+    the next few days.
     """
     raw_dir = Path(raw_dir)
     full = raw_dir / "fixtures_full.csv"
     df = _load_full_schedule(full, league_code) if full.exists() else None
+    source = "full_schedule"
 
     # Fall back per league, not just per file. Leagues start at different
     # times, so the full schedule can legitimately cover four of five while
@@ -297,9 +301,12 @@ def load_fixtures(raw_dir: Path, league_code: str, upcoming_only: bool = True,
     if df is None or df.empty:
         fd = raw_dir / "fixtures.csv"
         df = _load_football_data_fixtures(fd, league_code) if fd.exists() else pd.DataFrame()
+        source = "rolling"
 
     if df.empty:
-        return pd.DataFrame(columns=["date", "kickoff", "home", "away"])
+        empty = pd.DataFrame(columns=["date", "kickoff", "home", "away"])
+        empty.attrs["source"] = None
+        return empty
 
     if upcoming_only:
         cutoff = pd.Timestamp.now(tz="UTC") if now is None else pd.Timestamp(now)
@@ -307,6 +314,8 @@ def load_fixtures(raw_dir: Path, league_code: str, upcoming_only: bool = True,
             cutoff = cutoff.tz_localize("UTC")
         df = df[df["kickoff"] >= cutoff]
 
-    return (df[["date", "kickoff", "home", "away"]]
-            .sort_values("kickoff")
-            .reset_index(drop=True))
+    out = (df[["date", "kickoff", "home", "away"]]
+           .sort_values("kickoff")
+           .reset_index(drop=True))
+    out.attrs["source"] = source
+    return out

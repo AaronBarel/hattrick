@@ -216,11 +216,17 @@ with tab_table:
         )
     else:
         df = pd.read_json(sim_path)
-        st.caption(
-            "Monte Carlo simulation of remaining fixtures. NOTE: by default this only "
-            "simulates near-term fixtures.csv, not the full remaining season - see "
-            "scripts/simulate_season.py for how to supply a fuller schedule."
-        )
+        st.caption("Monte Carlo simulation of the remaining fixtures.")
+        try:
+            schedule_source = load_fixtures(RAW_DIR, code, upcoming_only=False).attrs.get("source")
+        except FileNotFoundError:
+            schedule_source = None
+        if schedule_source == "rolling":
+            st.warning(
+                "No full-season schedule for this league, so only the next few days of "
+                "fixtures were simulated and the table looks more settled than it is. "
+                "Run `uv run scripts/update_fixtures.py`, then `uv run scripts/simulate_season.py`."
+            )
         st.dataframe(
             df.style.background_gradient(subset=["title_%", "top4_%"], cmap="Greens")
                     .background_gradient(subset=["relegation_%"], cmap="Reds"),

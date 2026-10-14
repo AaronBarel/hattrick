@@ -6,7 +6,6 @@
 |---|---|---|---|
 | [football-data.co.uk](https://www.football-data.co.uk) | results, bookmaker odds (pre-closing + closing), rolling fixtures, second tiers | free CSV, no auth | **yes** |
 | [Understat](https://understat.com) via [`soccerdata`](https://github.com/probberechts/soccerdata) | match xG, full forward season schedule | free scrape, cached | no |
-| [Club Elo](http://clubelo.com) | independent ratings | free | no, sanity check only |
 
 Only football-data.co.uk is load-bearing. Everything else degrades: no xG
 means fitting on goals, and no Understat schedule means falling back to the
