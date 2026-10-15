@@ -13,7 +13,10 @@ rolling fixtures file.
 
 ## The processed table
 
-`data/processed/matches.csv` is the single table everything fits on:
+`data/processed/matches.csv` is the single table everything fits on. Full
+per-column metadata (type, source column, when it is missing) lives in
+`data/matches_metadata.yaml`, and `tests/test_matches_metadata.py` keeps it
+in sync with the loader:
 
 | Column | Meaning |
 |---|---|
