@@ -16,8 +16,10 @@ wheels/
 .ipynb_checkpoints/
 
 # Downloaded data: re-fetchable via scripts/update_data.py, and it changes
-# every matchweek, so pinning it in git would create constant churn.
-data/
+# every matchweek, so pinning it in git would create constant churn. The
+# column metadata is hand-written documentation, so it is tracked.
+data/*
+!data/matches_metadata.yaml
 
 # Fitted model artifacts: reproducible from scripts/fit_model.py.
 artifacts/

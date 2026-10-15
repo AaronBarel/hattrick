@@ -1,0 +1,145 @@
+# Column metadata for data/processed/matches.csv
+#
+# The table every model is fitted on. Built by scripts/update_data.py
+# (src/hattrick/data/loader.py); xG columns are merged in afterwards by
+# scripts/update_xg.py. tests/test_matches_metadata.py fails if a column is
+# added to or dropped from the table without updating this file.
+
+file: data/processed/matches.csv
+row: one played match
+key: [league, date, home, away]
+sources:
+  football-data.co.uk: results and bookmaker odds (mmz4281/ archive for the
+    five European leagues)
+  Understat: expected goals, via soccerdata
+
+columns:
+  # ---------------------------------------------------------------- identity
+  league:
+    type: string
+    description: League code - E0 Premier League, SP1 La Liga, I1 Serie A,
+      D1 Bundesliga, F1 Ligue 1. Each league is fitted as its own model.
+    source: football-data.co.uk `Div`
+    missing: never
+  date:
+    type: date (YYYY-MM-DD)
+    description: Match date. No kickoff time; that is read from the raw files
+      when needed.
+    source: football-data.co.uk `Date`
+    missing: never
+  home:
+    type: string
+    description: Home club, in football-data.co.uk's spelling. Other sources
+      (Understat) are mapped onto these names in data/xg.py, and duplicate
+      spellings of one club are merged by canonicalize_teams().
+    source: football-data.co.uk `HomeTeam`
+    missing: never
+  away:
+    type: string
+    description: Away club; same conventions as `home`.
+    source: football-data.co.uk `AwayTeam`
+    missing: never
+
+  # ----------------------------------------------------------------- result
+  home_goals:
+    type: integer
+    description: Full-time goals scored by the home side. The model's fitting
+      target unless fitted with --use-xg.
+    source: football-data.co.uk `FTHG`
+    missing: never (rows without a score are dropped)
+  away_goals:
+    type: integer
+    description: Full-time goals scored by the away side.
+    source: football-data.co.uk `FTAG`
+    missing: never (rows without a score are dropped)
+
+  # ------------------------------------------------------------------- odds
+  # Used only as the evaluation benchmark, never as a model input. All odds
+  # are decimal (a 2.50 price pays 2.50 per 1 staked, stake included). 1/odds
+  # is the implied probability INCLUDING the bookmaker's margin, so the three
+  # outcomes sum to more than 1; evaluation.py removes the margin before
+  # comparing with the model. h/d/a = home win / draw / away win.
+  b365h:
+    type: float (decimal odds)
+    description: Bet365 home-win odds, PRE-closing - collected days before
+      kickoff (Friday afternoon for weekend games, Tuesday for midweek). Not
+      the closing line; only a last-resort benchmark.
+    source: football-data.co.uk `B365H`
+    missing: never in the configured seasons
+  b365d:
+    type: float (decimal odds)
+    description: Bet365 draw odds, pre-closing (see b365h).
+    source: football-data.co.uk `B365D`
+    missing: never in the configured seasons
+  b365a:
+    type: float (decimal odds)
+    description: Bet365 away-win odds, pre-closing (see b365h).
+    source: football-data.co.uk `B365A`
+    missing: never in the configured seasons
+  b365ch:
+    type: float (decimal odds)
+    description: Bet365 home-win odds at kickoff (closing).
+    source: football-data.co.uk `B365CH`
+    missing: never in the configured seasons
+  b365cd:
+    type: float (decimal odds)
+    description: Bet365 draw odds at kickoff (closing).
+    source: football-data.co.uk `B365CD`
+    missing: never in the configured seasons
+  b365ca:
+    type: float (decimal odds)
+    description: Bet365 away-win odds at kickoff (closing).
+    source: football-data.co.uk `B365CA`
+    missing: never in the configured seasons
+  psch:
+    type: float (decimal odds)
+    description: Pinnacle home-win odds at kickoff (closing). The sharpest
+      single book, but the backtest only uses it where it covers at least 90%
+      of the holdout.
+    source: football-data.co.uk `PSCH`
+    missing: about 12-14% of rows in every league (the columns go blank
+      partway through recent seasons)
+  pscd:
+    type: float (decimal odds)
+    description: Pinnacle draw odds at kickoff (closing).
+    source: football-data.co.uk `PSCD`
+    missing: about 12-14% of rows in every league
+  psca:
+    type: float (decimal odds)
+    description: Pinnacle away-win odds at kickoff (closing).
+    source: football-data.co.uk `PSCA`
+    missing: about 12-14% of rows in every league
+  avgch:
+    type: float (decimal odds)
+    description: Average home-win odds across bookmakers at kickoff
+      (closing). The usual market benchmark in the backtest and the
+      notebooks.
+    source: football-data.co.uk `AvgCH`
+    missing: rarely
+  avgcd:
+    type: float (decimal odds)
+    description: Average draw odds across bookmakers at kickoff (closing).
+    source: football-data.co.uk `AvgCD`
+    missing: rarely
+  avgca:
+    type: float (decimal odds)
+    description: Average away-win odds across bookmakers at kickoff (closing).
+    source: football-data.co.uk `AvgCA`
+    missing: rarely
+
+  # --------------------------------------------------------- expected goals
+  home_xg:
+    type: float (goals)
+    description: Home expected goals - the summed probability that each home
+      shot was scored, given its position and type. Used as the fitting
+      target only with fit_model.py --use-xg, which is off by default
+      (docs/findings.md section 4 found no gain).
+    source: Understat, merged by scripts/update_xg.py
+    missing: rarely (about 0.1% of rows); also for clubs with no Understat
+      name mapping (data/xg.py _ALIASES) and whenever update_xg.py has not
+      been run, in which case the column is absent altogether
+  away_xg:
+    type: float (goals)
+    description: Away expected goals; same as home_xg.
+    source: Understat, merged by scripts/update_xg.py
+    missing: same as home_xg
